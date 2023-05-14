@@ -1,0 +1,470 @@
+CREATE DATABASE test_db ENCODING 'UTF8';					-- db olusturma
+DROP DATABASE test_db;										-- db silme
+	CREATE TABLE tablo_adi (								-- tablo olusturma
+	 id serial PRIMARY KEY,
+	 name varchar(20) UNIQUE NOT NULL,
+	 dateCreated timestamp DEFAULT current_timestamp
+	);
+ALTER TABLE tablo_adi ADD PRIMARY KEY (id);					-- Birincil anahtar ekleme
+
+INSERT INTO tablo (satir1,satir2) VALUES (4, 'testveri');	-- yeni kayit girme
+
+UPDATE tablo SET test = 'test2' WHERE id = 4;				-- satir güncelleme
+UPDATE table_name
+SET column1 = value1, column2 = value2, ...
+WHERE condition;
+
+DELETE FROM tablo WHERE id = 4;								-- kayit silme
+
+DELETE FROM cd.members
+WHERE memid NOT IN (
+    SELECT memid
+    FROM cd.bookings
+);
+
+
+SELECT * FROM tablo;										-- tablodaki tüm kayitlari getir
+SELECT * FROM tablo ORDER BY id;							-- tablodaki tüm kayitlari getir - id sirasi
+SELECT * FROM qwe WHERE id='2' or name='hll';
+SELECT * FROM qwe WHERE bakiye >560 or name LIKE 'g%';		-- g% g ile baslayan.. %e% icinde e olan.. %e e ile biten..
+SELECT * FROM qwe WHERE bakiye >560 or name NOT LIKE 'g%';	-- NOT -> tersi g ile baslamayan..
+SELECT COUNT(*) FROM tablo;									-- toplam satir sayisi
+SELECT COUNT(*) FROM tablo WHERE city='Batman';				-- toplam satir sayisi - batman olanlar
+SELECT SUM(bakiye) FROM tablo;								-- bakiyelerin toplami
+SELECT SUM(bakiye) FROM tablo WHERE city='Batman';			-- bakiyelerin toplami - batman olanlar
+SELECT SUM(bakiye) FROM tablo WHERE city!='Batman';			-- bakiyelerin toplami - batman olmayanlar
+SELECT AVG(bakiye) FROM tablo;								-- bakiyelerin ortalamasi
+SELECT MIN(bakiye), MAX(bakiye) FROM tablo;					-- min ve max
+SELECT MAX(bakiye)-MIN(bakiye) FROM tablo;					-- max - min
+SELECT city, COUNT(*) FROM musteri GROUP BY city;			-- batmanda 1, izmirde 3 musteri var gibi gruplandirma
+SELECT city, COUNT(*) AS person FROM musteri GROUP BY city;	-- sutun basligi count iken person oldu
+SELECT city, COUNT(*) AS person FROM musteri GROUP BY city ORDER BY COUNT(*) DESC;
+-- person sayisina gore siralama, desc:tersten siralar  --  ASC: naturel order
+SELECT city, SUM(bakiye) FROM musteri GROUP BY city;		-- sehirlere gore bakiye toplamlari
+SELECT city, COUNT(*) FROM musteri GROUP BY city HAVING COUNT(*)>3;	-- gruplandirma sonrasi person 3ten fazla olan sehirler
+SELECT * FROM musteri WHERE bakiye=(SELECT MAX(bakiye) FROM musteri);	-- max bakiyeliyi dondurur
+SELECT * FROM musteri WHERE bakiye=(SELECT MAX(bakiye) FROM musteri) WHERE city'batman'; -- max bakiyeliyi dondurur -batman
+SELECT * FROM musteri WHERE meslek(SELECT id FROM meslek WHERE ad='ogretmen');
+-- ogretmenin id'si 1 ise meslek idsi 1 olan musteriler listelenir
+
+INSERT INTO kitaplar (kitap_id, yazar_id, adi, yayin_tarihi) VALUES 
+(1, 1, 'Harry Potter and the Philosopher''s Stone', '1997-06-26'),
+(2, 1, 'Harry Potter and the Chamber of Secrets', '1998-07-02');
+-- coklu ekleme
+
+CREATE TABLE students5(
+	id int,
+	name varchar(50),
+	grade real,
+	register_date date,
+	CONSTRAINT student_pk PRIMARY KEY(id,name)				---- composite 2 adet primary
+)
+CREATE TABLE personel(
+	id int,
+	name varchar(50) CHECK(name <> ''),						---- <>  --> not equals
+	salary real,
+	age int CHECK(age>0)
+)
+UPDATE musteri SET bakiye=bakiye+bakiye*0.1 where meslek=(SELECT id FROM meslek WHERE ad='muhendis');
+-- meslege gore bakiye guncelleme
+SELECT * FROM musteri WHERE sehir='Ankara' AND meslek=(SELECT id FROM meslek WHERE ad='ogretmen')
+-- ankarada bulunan ogretmen musteriler
+TRUNCATE TABLE urun;										-- urun tablosunu bosaltir
+SELECT musteri.ad,soyad,sehir,meslek.ad FROM musteri FROM musteri INNER JOIN meslek ON musteri.meslek=meslek.id;
+-- her iki tabloda 'ad' oldugu icin 'musteri.ad' gibi belirtmek gerekiyor
+-- inner join: ortak alanlari birlestir
+-- ON musteri.meslek=meslek.id : su sarta gore getir..
+SELECT ad,COUNT(*) FROM bolum INNER JOIN fakulte ON bolum.bolumf=fakulte.id GROUP BY ad ORDER BY ad;
+-- her bir fakultede olan bolum sayilarini verir
+SELECT bolumid,bolumad,ad FROM bolum LEFT JOIN fakulte ON bolum.bolumf=fakulte.id;
+-- bolumlerin yaninda o bolumun bulundugu fakultenin id si yerine adini verir
+SELECT bolumid,bolumad,ad FROM fakulte LEFT JOIN bolum ON fakulte.id=bolum.bolumf;
+-- LEFT JOIN : soldakine birlestir
+-- fakultelere gore listeler. tip fakultesinin bir bolumu yoksa bolumid ve bolumad -> null olarak listelenir
+
+SELECT id,ad,bolumad FROM bolum RIGHT JOIN fakulte ON fakulte.id=bolum.bolumf;
+-- RIGHT JOIN : sagdakine birlestir
+-- fakultelere gore listeler. tip fakultesinin bir bolumu yoksa bolumid ve bolumad -> null olarak listelenir
+-- sag taraftaki fakultenin degerlerini getirir, karsiliginda bir bolum yoksa bolumad=null olur
+SELECT musteri.ad,soyad,sehir,meslek.ad FROM musteri FULL JOIN ON musteri.meslek=meslek.id;
+-- FULL JOIN : her iki tarafta olmayan degerler icin null verir ve listelenir
+-- yani meslek listesindeki bir meslege sahip olan bir musteri olmasa da listelenir, ad,soyad,sehir null olur
+
+SELECT bolumad,ad FROM bolum CROSS JOIN fakulte;
+-- tum bolumadlar siralanir, sag tarafta 1. fakulte adi, sonra tekrar tum bolumadlar siralanir, sag tarafta 2. fakulte adi
+-- bu boyle fakulte sayisi kadar devam eder..
+
+SELECT * FROM bolum2
+INTERSECT													-- iki liste arasindaki ortak degerleri verir
+SELECT * FROM bolum3
+
+SELECT * FROM bolum2
+INTERSECT													-- bolum2'den kseisim kumesini cikarir, kalani verir
+SELECT * FROM bolum3
+
+SELECT * FROM bolum2
+UNION														-- iki liste birlestirilir, ayni degerler 1 kere yazdirilir
+SELECT * FROM bolum3 ORDER BY id							-- UNION ALL kullanirsak ayni degerler birden fazla olur
+
+SELECT ASCII ('A')											-- ascii degerini verir
+SELECT CONCAT('g','h')										-- birlestirir
+SELECT CONCAT_WS('&','g','h')								-- her string arasina & koyar
+
+
+DELETE FROM students;										-- tum verileri siler, where kullanilabilir
+TRUNCATE TABLE doctors;										-- tum verileri siler, where kullanilamaz, daha hizli
+-- iki tablo arasinda parent child iliskisi varsa once childdakiler sonra parenttakiler silinmeli
+DBCC CHECKIDENT (tablo adi,RESEED,0)						-- id sifirlama
+
+CREATE TABLE notlar(  -- child table
+talebe_id int,
+ders_adi varchar(30),
+yazili_notu int,
+CONSTRAINT notlar_fk FOREIGN KEY (talebe_id) REFERENCES talebeler(id)
+on delete cascade	parenttan silmeye izin verir. parenttan silince childan da silinir
+);
+
+DROP TABLE talebeler CASCADE;								-- parent table i zorla siler (normalde once child silinmeli)
+-- childdaki foreign silinir ve sonra parent table silinir
+
+DROP TABLE IF EXISTS talebeler1;							-- varsa siler yoksa hata vermez
+
+SELECT * 
+FROM musteriler
+WHERE urun_isim IN ('Orange','Apple','Apricot');			-- 'Orange' OR 'Apple' OR 'Apricot' listeler
+
+SELECT * 
+FROM musteriler
+WHERE urun_isim NOT IN ('Orange','Apple','Apricot');		-- 'Orange' OR 'Apple' OR 'Apricot' olmayanlari listeler
+
+SELECT *
+FROM musteriler
+WHERE urun_id BETWEEN 20 AND 40;							-- inclusive: dahil
+
+SELECT *
+FROM musteriler
+WHERE urun_id NOT BETWEEN 20 AND 40; 						-- exclusive: dahil degil
+
+SELECT calisan_id id,calisan_isim || calisan_dogdugu_sehir AS isim_ve_sehir FROM workers;
+--  || : iki sutunu birlestirir
+SELECT calisan_id id,calisan_isim || ' ' || calisan_dogdugu_sehir AS isim_ve_sehir FROM workers;
+--  || : iki sutunu birlestirir - arada bosluk
+-- gecici yeni isimlendirmede (sadece goruntulemede) AS kullanilmasa da olur
+
+SELECT ROUND(AVG(maas), 2) FROM calisanlar3;				-- virgulden sonra 2 karakter
+SELECT ROUND(AVG(maas), -2) FROM calisanlar3;				-- 10un katlari olacak sekilde geriye yuvarlar 2714 -> 2700
+SELECT ROUND(AVG(maas)) FROM calisanlar3;					-- virgulsuz
+
+SELECT LEFT ('qwert',3);									-- soldan 3 karakter
+SELECT RIGHT ('qwert',3);									-- sagdan 3 karakter
+SELECT LENGTH ('qwert');									-- karakter sayisi
+SELECT id,replace(name,'a',"b") FROM table;					-- name sutunundaki 'a'lari 'b' yapar
+SELECT reverse(name) FROM table;							-- name sutunundaki degerleri ters cevirir
+SELECT SUBSTRING ('qwert',3,1);								-- output: r - 3. karakterden itibaren 1 char (INDEX DEGIL)
+SELECT lower(name), upper(name) FROM table;					-- kucuk ve buyuk harfli verir (2 sutun)
+SELECT abs(-5);												-- mutlak deger verir
+SELECT CEIL(5.6);											-- yukari yuvarlar (CEILING de olur)
+SELECT FLOOR(5.6);											-- asagi yuvarlar
+SELECT PI();
+SELECT POWER(2,4);											--	2 uzeri 4
+SELECT RANDOM();											-- 0 - 0.9999..
+SELECT ROUND(1.2345, 2);									-- virgulden sonra 2 basamak
+SELECT SIGN(-5);											-- sayi pozitifse 1 negatifse -1 sifirsa 0 donduruyor
+SELECT SQRT(25);											-- output: 5
+SELECT CURRENT_DATE;
+SELECT CURRENT_TIME;										-- saniye-salise duyarliligi icin son ekle : (1)
+SELECT NOW();
+SELECT AGE(TIMESTAMP '26.02.2023');							-- bugun 28.02.2023 ise output : 2 days
+SELECT ad,tarih.age(now, tarih) FROM kitaplar;				-- kitabin kac gun once alindigini gorebiliriz mesela
+
+SELECT *
+FROM musteriler
+WHERE LEFT(musteri_isim,1) BETWEEN 'A' AND 'J';				-- soldan 1. karaktere gore
+
+SELECT *
+FROM calisanlar3
+WHERE maas=(SELECT MAX(maas) FROM calisanlar3);
+
+
+--Interview Question:calisanlar3 tablosunda max veya min maasi alan çalisanlarin tüm feildlarini gösteriniz.
+-- 1. yol
+SELECT *
+FROM calisanlar3
+WHERE maas=(SELECT max(maas) FROM calisanlar3) OR maas=(SELECT MIN(maas) FROM calisanlar3);
+-- 2. yol
+SELECT *
+FROM calisanlar3
+WHERE maas IN ( (SELECT max(maas) FROM calisanlar3 ),( SELECT min(maas) FROM calisanlar3 ));
+
+
+SELECT isim,maas,isyeri
+FROM calisanlar3
+WHERE isyeri IN (SELECT marka_isim FROM markalar WHERE calisan_sayisi>15000);
+
+
+CREATE VIEW view1											-- view olusturma, 'ad' fakulte tablosunda
+AS
+SELECT bolumid,bolumad,ad FROM bolum INNER JOIN fakulte ON bolum.bolumf=fakulte.id;
+SELECT * FROM view1;
+
+
+--SORU: .Sinav notu 65 veya 85 olan ogrencilerin tüm bilgilerini listele
+SELECT * FROM ogrenciler WHERE sinav_notu=65 OR sinav_notu=85;
+SELECT * FROM ogrenciler WHERE sinav_notu IN (65,85);		-- or yerine in kullanilir
+
+
+SELECT *
+FROM insanlar
+WHERE name IS NULL;											-- null olanlar
+
+SELECT *
+FROM insanlar
+WHERE name IS NOT NULL;										-- null olmayanlar
+
+
+SELECT * 
+FROM people
+ORDER BY isim ASC, soyisim DESC;
+-- isime gore naturel sira, ayni isimler varsa soyisimlere gore tersten..
+
+
+SELECT isim,soyisim
+FROM people
+ORDER BY LENGTH(soyisim)									-- soyisim kelime uzunluklarina göre siralama
+
+
+
+SELECT sirket, MIN(maas) min_maas
+FROM personel
+GROUP BY sirket
+HAVING MIN(maas)>4000;
+
+
+
+Do $$
+Declare sayi int:=24;
+Begin
+if sayi%2=0 then
+Raise Notice 'sayi cifttir';
+else
+Raise Notice 'sayi tektir';
+end if;
+end $$
+
+
+SELECT dersad,bolumid,
+	CASE
+			WHEN bolumid=1
+		THEN 'Yazilim'
+			WHEN bolumid=2
+		THEN 'Mekatronik'
+			WHEN bolumid=3
+		THEN 'Elektronik'
+			WHEN bolumid=4
+		THEN 'Makine'
+	END DURATION
+FROM Dersler
+ORDER BY dersid;
+-- yeni bir sutunda bolumid=1 olanlarda 'Yazilim' yazar...
+-- END'den sonraki DURATION olusan gecici sutunun ismi
+
+
+
+SELECT name,
+	CASE
+			WHEN monthlymaintenance>100
+		THEN 'expensive'
+	ELSE
+		'cheap'
+	END as cost
+FROM cd.facilities
+
+
+
+
+DO $$
+DECLARE
+	sayac int:=1;
+BEGIN
+	WHILE sayac<=10
+	LOOP
+	RAISE NOTICE 'Sayac: %',sayac;
+	sayac := sayac + 1;
+	END LOOP;
+END $$;
+
+
+
+DO $$
+DECLARE
+	sayac int:=1;
+	toplam int:=0;
+BEGIN
+	LOOP
+		EXIT WHEN sayac=6;
+		toplam:=toplam+sayac;
+		sayac := sayac + 1;
+	END LOOP;
+	RAISE NOTICE 'ardisik toplam sonucu: %', toplam;		-- output: 15 
+END $$;
+
+
+
+SELECT pg_sleep(5);											-- 5 sn bekleme
+
+
+CREATE PROCEDURE deneme()									-- procedure olusturma (method gibi)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+RAISE NOTICE '1. paragraf';
+END; $$
+
+CREATE OR REPLACE PROCEDURE deneme()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+RAISE NOTICE '1. paragraf';
+RAISE NOTICE '2. paragraf';
+END; $$
+
+call deneme();												-- procedure cagirma
+
+
+
+CREATE PROCEDURE fakulte_ekle (p1 integer, p2 text)			-- parametreli procedure olusturma
+LANGUAGE SQL
+AS $$
+INSERT INTO fakulte (id, ad) VALUES (p1, p2);
+$$;
+
+
+
+CREATE FUNCTION toplam(s1 int, s2 int)
+RETURNS int
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+	sonuc integer;
+BEGIN
+	sonuc := s1 + s2;
+	return sonuc;
+end;
+$$;
+
+SELECT toplam(2, 3);
+-- procedurelerde CALL, fonksiyonlarda SELECT kullanilir
+
+
+SELECT * FROM developers WHERE name ILIKE 'gülsüm';			-- ILIKE  -  ignoreCase
+
+
+-----------------------------------------------------------------------------------------------
+---------------------------------- TRIGGER  OLUSTURMA  ----------------------------------------
+-- her fakulte eklendiginde toplamfakulte sayisi otomatik artar
+
+CREATE OR REPLACE FUNCTION test()
+	RETURNS TRIGGER
+	AS
+	$$
+BEGIN
+UPDATE toplamfakulte SET sayi = sayi + 1;
+RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER testtrig
+AFTER INSERT
+ON fakulte
+FOR EACH ROW
+EXECUTE PROCEDURE test();
+
+INSERT INTO fakulte (id,ad) VALUES (11,'asd');
+
+SELECT * FROM toplamfakulte;
+-----------------------------------------------------------------------------------------------
+
+
+SELECT memid,surname,firstname,joindate
+FROM cd.members
+WHERE joindate > '2012-09-01'
+
+
+SELECT DISTINCT surname 									-- DISTINCT : benzersizleri getirir
+FROM cd.members
+ORDER BY surname
+LIMIT 10													-- ilk 10u getirir
+
+
+-----------------------------------------------------------------------------------------------
+
+-- How can you produce a list of the start times for bookings by members named 'David Farrell'?
+select bks.starttime 
+	from 
+		cd.bookings bks
+		inner join cd.members mems
+			on mems.memid = bks.memid
+	where 
+		mems.firstname='David' 
+		and mems.surname='Farrell';
+
+-- boyle de olur:
+select starttime from cd.bookings
+where memid=(select memid 
+			   from cd.members 
+			   where firstname='David' and surname='Farrell'
+			   limit 1)
+
+
+
+
+
+-- How can you produce a list of all members who have used a tennis court?
+-- Include in your output the name of the court, and the name of the member formatted as a single column.
+-- Ensure no duplicate data, and order by the member name followed by the facility name.
+
+select DISTINCT m.firstname || ' ' || m.surname member, f.name facility
+from cd.members m
+inner join cd.bookings b
+on m.memid = b.memid
+inner join cd.facilities f
+on f.facid = b.facid
+where f.name ilike '%Tennis Court%'
+order by member, facility
+
+
+
+-- How can you produce a list of bookings on the day of 2012-09-14 which will cost the member (or guest)
+-- more than $30? Remember that guests have different costs to members (the listed costs are
+-- per half-hour 'slot'), and the guest user is always ID 0. Include in your output the name of the facility,
+-- the name of the member formatted as a single column, and the cost. Order by descending cost.
+
+select member, facility, cost from (
+	select 
+		mems.firstname || ' ' || mems.surname as member,
+		facs.name as facility,
+		case
+			when mems.memid = 0 then
+				bks.slots*facs.guestcost
+			else
+				bks.slots*facs.membercost
+		end as cost
+		from
+			cd.members mems
+			inner join cd.bookings bks
+				on mems.memid = bks.memid
+			inner join cd.facilities facs
+				on bks.facid = facs.facid
+		where
+			bks.starttime >= '2012-09-14' and
+			bks.starttime < '2012-09-15'
+	) as bookings
+	where cost > 30
+order by cost desc; 
+
+
+
+
+https:--www.programiz.com/sql
