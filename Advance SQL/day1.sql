@@ -87,7 +87,7 @@ declare
 begin
 	select type
 	from film
-	into film_type
+	into film_type -- select ve into'daki isimler ayni olamaz (mesela select type.. into type..)
 	where id=1;
 	
 	raise notice 'Film type with id 1 : %',film_type;
